@@ -17,7 +17,7 @@ namespace AnyCalc
         private bool Overflow = false; 
         private readonly List<StoredObject> objects = new();
         private static readonly Font ButtonFont = new("OCR A Extended", 30F, FontStyle.Bold, GraphicsUnit.Pixel);
-        private static readonly string[] operators = { "+", "-", "*", "/", "^", "=","Clr","CE", "⌫" };
+        private static readonly string[] operators = { "+", "-", "*", "/", "^", "%", "=", "Clr", "CE", "⌫" };
         private readonly List<Button> NumButtons = new();
         private readonly List<Button> OpButtons = new();
         private readonly List<Button> ClearButtons = new();
@@ -51,6 +51,9 @@ namespace AnyCalc
                         case "^":
                             res ^= num;
                             break;
+                        case "%":
+                            res %= num;
+                            break;
                     }
                 }
             }
@@ -79,25 +82,25 @@ namespace AnyCalc
                 button.BackgroundImageLayout = ImageLayout.None;
                 button.Font = ButtonFont;
                 button.Location = new Point((i % 3 * 2 * s) + xoff,  yoff);
-                button.Name = $"{operators[6 + i]}";
+                button.Name = $"{operators[7 + i]}";
                 button.Size = new Size(2 * s, s);
                 button.TabIndex = i + minTabIdx;
-                button.Text = $"{operators[6 + i]}";
+                button.Text = button.Name;
                 button.UseVisualStyleBackColor = true;
                 button.Click += ClearButton_Click;
                 ClearButtons.Add(button);
                 Controls.Add(button);
             }
-            for (var i = 0; i < 6; i++)
+            for (var i = 0; i < 7; i++)
             {
                 button = new();
                 button.BackgroundImageLayout = ImageLayout.None;
                 button.Font = ButtonFont;
-                button.Location = new Point(xoff +6* s, (i % 6 * s) + yoff);
+                button.Location = new Point(xoff +6* s, (i % 7 * s) + yoff);
                 button.Name = $"{operators[i]}";
                 button.Size = new Size(s, s);
                 button.TabIndex = i + minTabIdx + 3;
-                button.Text = $"{operators[i]}";
+                button.Text = button.Name;
                 button.UseVisualStyleBackColor = true;
                 button.Click += OpButton_Click;
                 OpButtons.Add(button);
@@ -114,7 +117,7 @@ namespace AnyCalc
                 button.Name = $"{Number.vls[i]}";
                 button.Size = new Size(s, s);
                 button.TabIndex = i + minTabIdx + 9;
-                button.Text = $"{Number.vls[i]}";
+                button.Text = button.Name;
                 button.UseVisualStyleBackColor = true;
                 button.Click += NumButton_Click;
                 NumButtons.Add(button);
