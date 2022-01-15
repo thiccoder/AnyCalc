@@ -4,7 +4,6 @@ using System.Linq;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Media;
-using System.Runtime.InteropServices;
 
 namespace AnyCalc
 {
