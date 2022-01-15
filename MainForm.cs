@@ -10,9 +10,6 @@ namespace AnyCalc
 {
     public partial class MainForm : Form
     {
-
-        [DllImport("user32.dll")]
-        public static extern bool GetCaretPos(out System.Drawing.Point lpPoint);
         private int CurrentBase = 10;
         private bool Overflow = false; 
         private readonly List<StoredObject> objects = new();
