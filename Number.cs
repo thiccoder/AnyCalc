@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Media;
 
 namespace AnyCalc
 {
     class Number
     {
-        public static char[] vls = new char[36];
-        public static bool Fits(char sym, int Base) => (vls.Contains(sym) && Array.IndexOf(vls, sym) < Base);
+        public static char[] digitSet = new char[36];
+        public static bool Fits(char sym, int Base) => (digitSet.Contains(sym) && Array.IndexOf(digitSet, sym) < Base);
         public static bool Fits(string text, int Base) 
         {
             foreach (char sym in text) 
@@ -22,81 +21,51 @@ namespace AnyCalc
         {
             for (int i = 0; i < 10; i++) 
             {
-                vls[i] = i.ToString()[0];
+                digitSet[i] = i.ToString()[0];
             }
             for (int i = 0; i < 26; i++)
             {
-                vls[i + 10] = (char)(i + 65);
+                digitSet[i + 10] = (char)(i + 65);
             }
         }
-        public int[] Values { get { return values.ToArray(); } }
-        private readonly List<int> values = new();
+        public int[] Digits { get { return digits.ToArray(); } }
+        private readonly List<int> digits = new();
         public int Base { get; private set; }
-        private readonly bool neg = false;
-        public static Number operator <<(Number a, int newBase) 
-        {
-            const int BitsInLong = 64;
-            int decimalNumber = (int)a;
-            if (newBase < 2 || newBase > vls.Length)
-                throw new ArgumentException("newBase must be between 2 and " + vls.Length.ToString());
-
-            if (decimalNumber == 0)
-                return Zero(newBase);
-
-            int index = BitsInLong - 1;
-            long currentNumber = Math.Abs(decimalNumber);
-            char[] charArray = new char[BitsInLong];
-
-            while (currentNumber != 0)
-            {
-                int remainder = (int)(currentNumber % newBase);
-                charArray[index--] = vls[remainder];
-                currentNumber /= newBase;
-            }
-
-            string res = new(charArray, index + 1, BitsInLong - index - 1);
-            if (decimalNumber < 0)
-            {
-                res = "-" + res;
-            }
-
-            return new Number(res,newBase);
-        }
+        private readonly bool sign = false;
         public static Number Zero(int Base=10)
         {
             return new Number("0", Base);
         }
-
-        private static List<int> Prettify(List<int> vals, int Base)
+        private static List<int> Prettify(List<int> digits, int Base)
         {
-            bool needPretify = false;
-            foreach (int sym in vals)
+            bool needPrettify = false;
+            foreach (int sym in digits)
             {
                 if (sym >= Base || sym < 0)
                 {
-                    needPretify = true;
+                    needPrettify = true;
                     break;
                 }
             }
-            if (needPretify)
+            if (needPrettify)
             {
-                int l = vals.Count;
+                int l = digits.Count;
                 for (int i = l - 1; i > 0; i--)
                 {
-                    if (vals[i] >= Base || vals[i] < 0)
+                    if (digits[i] >= Base || digits[i] < 0)
                     {
-                        vals[i - 1] += vals[i] / Base;
-                        vals[i] = vals[i] % Base;
+                        digits[i - 1] += digits[i] / Base;
+                        digits[i] = digits[i] % Base;
                     }
                 }
-                if (vals[0] >= Base)
+                if (digits[0] >= Base)
                 {
-                    vals.Insert(0, vals[0] / Base);
-                    vals[1] = vals[1] % Base;
+                    digits.Insert(0, digits[0] / Base);
+                    digits[1] = digits[1] % Base;
                 }
             }
-            while (vals.Count > 1 && vals.First() == 0) { vals = vals.GetRange(1,vals.Count - 1); }
-            return vals;
+            while (digits.Count > 1 && digits.First() == 0) { digits = digits.GetRange(1,digits.Count - 1); }
+            return digits;
         }
 
         private bool CheckErrors(Number b)
@@ -111,9 +80,9 @@ namespace AnyCalc
             }
         }
 
-        public static Number FromVals(List<int> vals, int Base = 10, bool neg = false)
+        public static Number FromVals(List<int> digits, int Base = 10, bool sign = false)
         {
-            string str = (neg ? "-" : "") + string.Join("", vals.Select(x => vls[x]));
+            string str = (sign ? "-" : "") + string.Join("", digits.Select(x => digitSet[x]));
             return new Number(str, Base);
         }
 
@@ -124,16 +93,16 @@ namespace AnyCalc
 
         public Number Abs()
         {
-            return FromVals(values, Base);
+            return FromVals(digits, Base);
         }
 
         public override string ToString()
         {
-            if (values.Count == 1 && values[0] == 0)
+            if (digits.Count == 1 && digits[0] == 0)
             {
                 return "0";
             }
-            return (neg ? "-" : "") + string.Join("", values.Select(x => vls[x]));
+            return (sign ? "-" : "") + string.Join("", digits.Select(x => digitSet[x]));
         }
 
         public override int GetHashCode()
@@ -144,23 +113,49 @@ namespace AnyCalc
 
         public Number(string str, int Base = 10)
         {
-            neg = false;
+            sign = false;
             if ((str[0] == '-') || (str[0] == '+'))
             {
-                neg = str[0] == '-';
+                sign = str[0] == '-';
                 str = str[1..];
             }
-            values = new List<int>(0);
+            digits = new List<int>(0);
             foreach (char sym in str)
             {
-                values.Add(Array.FindIndex(vls, x => x == sym));
+                digits.Add(Array.FindIndex(digitSet, x => x == sym));
             }
             this.Base = Base;
-            values = Prettify(values,Base);
+            digits = Prettify(digits,Base);
         }
+        public static Number operator <<(Number a, int newBase)
+        {
+            const int BitsInLong = 64;
+            int decimalNumber = (int)a;
+            if (newBase < 2 || newBase > digitSet.Length)
+                throw new ArgumentException("newBase must be between 2 and " + digitSet.Length.ToString());
 
-        
-        
+            if (decimalNumber == 0)
+                return Zero(newBase);
+
+            int index = BitsInLong - 1;
+            long currentNumber = Math.Abs(decimalNumber);
+            char[] charArray = new char[BitsInLong];
+
+            while (currentNumber != 0)
+            {
+                int remainder = (int)(currentNumber % newBase);
+                charArray[index--] = digitSet[remainder];
+                currentNumber /= newBase;
+            }
+
+            string res = new(charArray, index + 1, BitsInLong - index - 1);
+            if (decimalNumber < 0)
+            {
+                res = "-" + res;
+            }
+
+            return new Number(res, newBase);
+        }
         public static bool operator ==(Number a, Number b)
         {
             return a.Equals(b);
@@ -175,33 +170,33 @@ namespace AnyCalc
         {
             if (a.CheckErrors(b))
             {
-                if (a.neg != b.neg)
+                if (a.sign != b.sign)
                 {
-                    return (a.neg ? 0 : 1) > (b.neg ? 0 : 1);
+                    return (a.sign ? 0 : 1) > (b.sign ? 0 : 1);
                 }
-                List<int> sv = new();
-                List<int> ov = new();
-                sv.AddRange(a.Values);
-                ov.AddRange(b.Values);
-                if (sv.Count > ov.Count)
+                List<int> aDigits = new();
+                List<int> bDigits = new();
+                aDigits.AddRange(a.Digits);
+                bDigits.AddRange(b.Digits);
+                if (aDigits.Count > bDigits.Count)
                 {
                     return true;
                 }
-                else if (sv.Count > ov.Count)
+                else if (aDigits.Count > bDigits.Count)
                 {
                     return false;
                 }
                 else
                 {
                     int cnt = 0;
-                    for (int i = 0; i < sv.Count; i++)
+                    for (int i = 0; i < aDigits.Count; i++)
                     {
-                        if (sv[i] > ov[i])
+                        if (aDigits[i] > bDigits[i])
                         {
                             cnt += 1;
                         }
                     }
-                    if (cnt == sv.Count)
+                    if (cnt == aDigits.Count)
                     {
                         return true;
                     }
@@ -228,63 +223,63 @@ namespace AnyCalc
 
         public static Number operator -(Number a)
         {
-            return FromVals(a.values, a.Base, !a.neg);
+            return FromVals(a.digits, a.Base, !a.sign);
         }
 
         public static Number operator +(Number a, Number b)
         {
             if (a.CheckErrors(b))
             {
-                List<int> av = new();
-                List<int> bv = new();
-                bool an = a.neg;
-                bool bn = b.neg;
-                bool nn = an;
-                av.AddRange(a.Values);
-                bv.AddRange(b.Values);
+                List<int> aDigits = new();
+                List<int> bDigits = new();
+                bool aSign = a.sign;
+                bool bSign = b.sign;
+                bool rSign = aSign;
+                aDigits.AddRange(a.Digits);
+                bDigits.AddRange(b.Digits);
                 bool swap = a < b;
-                if (av.Count > bv.Count)
+                if (aDigits.Count > bDigits.Count)
                 {
-                    for (int i = bv.Count; i < av.Count; i++)
+                    for (int i = bDigits.Count; i < aDigits.Count; i++)
                     {
-                        bv.Insert(0, 0);
+                        bDigits.Insert(0, 0);
                     }
                 }
-                else if (av.Count < bv.Count)
+                else if (aDigits.Count < bDigits.Count)
                 {
-                    for (int i = av.Count; i < bv.Count; i++)
+                    for (int i = aDigits.Count; i < bDigits.Count; i++)
                     {
-                        av.Insert(0, 0);
+                        aDigits.Insert(0, 0);
                     }
                 }
                 if (swap) 
                 {
-                    var tmpv = av;
-                    av = bv;
-                    bv = tmpv;
-                    var tmpn = an;
-                    an = bn;
-                    bn = tmpn;
-                    nn = an;
+                    var tmpDigits = aDigits;
+                    aDigits = bDigits;
+                    bDigits = tmpDigits;
+                    var tmpSign = aSign;
+                    aSign = bSign;
+                    bSign = tmpSign;
+                    rSign = aSign;
 
                 }
-                var nv = new List<int>(av.Count);
-                nv.AddRange(Enumerable.Repeat(0, av.Count));
-                for (int i = 0; i < av.Count; i++)
+                var rDigits = new List<int>(aDigits.Count);
+                rDigits.AddRange(Enumerable.Repeat(0, aDigits.Count));
+                for (int i = 0; i < aDigits.Count; i++)
                 {
-                    int ar = av[i] * (an ? -1 : 1);
-                    int br = bv[i] * (bn ? -1 : 1);
-                    nv[i] = ar + br;
+                    int aDigit = aDigits[i] * (aSign ? -1 : 1);
+                    int bDigit = bDigits[i] * (bSign ? -1 : 1);
+                    rDigits[i] = aDigit + bDigit;
                 }
-                nv = Prettify(nv, a.Base);
-                while (nv.First() < 0)
+                rDigits = Prettify(rDigits, a.Base);
+                while (rDigits.First() < 0)
                 {
-                    nv = Prettify(nv, a.Base);
-                    nn = !nn;
-                    for (int i  = 0; i < nv.Count;i++) 
-                        nv[i] *= -1;
+                    rDigits = Prettify(rDigits, a.Base);
+                    rSign = !rSign;
+                    for (int i  = 0; i < rDigits.Count;i++) 
+                        rDigits[i] *= -1;
                 } 
-                return FromVals(nv, a.Base, nn);
+                return FromVals(rDigits, a.Base, rSign);
             }
             else return Zero(a.Base);
         }
@@ -334,7 +329,6 @@ namespace AnyCalc
             if (value.Length != 2)
             {
                 throw new ArgumentException(null, nameof(value));
-                //return Zero(10);
             }
             else
             {
@@ -343,18 +337,14 @@ namespace AnyCalc
         }
         public static explicit operator int(Number a) 
         {
-            string number = a.ToString();
             if (a == Zero(a.Base))
             {
                 return 0;
             }
-
             int res = 0;
             int multiplier = 1;
-            for (int i = number.Length - 1; i >= 0; i--)
+            foreach (int digit in a.Digits)
             {
-                char sym = number[i];
-                int digit = Array.FindIndex(vls, x => x == sym);
                 res += digit * multiplier;
                 multiplier *= a.Base;
             }

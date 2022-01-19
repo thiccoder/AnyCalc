@@ -110,7 +110,7 @@ namespace AnyCalc
                 button.BackgroundImageLayout = ImageLayout.None;
                 button.Font = ButtonFont;
                 button.Location = new Point((i % 6 * s) + xoff, (1+i / 6) * s + yoff);
-                button.Name = $"{Number.vls[i]}";
+                button.Name = $"{Number.digitSet[i]}";
                 button.Size = new Size(s, s);
                 button.TabIndex = i + minTabIdx + 9;
                 button.Text = button.Name;
@@ -229,7 +229,7 @@ namespace AnyCalc
                 {
                     HandleOperator("=");
                 }
-                else if (Number.vls.Contains(keyChar[0]))
+                else if (Number.digitSet.Contains(keyChar[0]))
                 {
                     HandleNumber(keyChar);
                 }
